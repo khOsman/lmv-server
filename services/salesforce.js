@@ -15,7 +15,7 @@ export async function verifySalesforceSession({ accessToken, instanceUrl }) {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const userId = data.user_id || (data.sub ? data.sub.split('/').pop() : null);
-  return { userId, username: data.preferred_username || data.email };
+  return { userId, username: data.name || data.preferred_username || data.email };
 }
 
 export async function soqlQuery({ accessToken, instanceUrl, soql }) {
