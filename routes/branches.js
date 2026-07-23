@@ -14,7 +14,8 @@ const router = express.Router();
 // Only learners with a blank Selection__c are returned: this app is the
 // pre-selection verification gate. Once TaroWorks runs the learner
 // selection survey and sets Selection__c to Yes/No, that learner is done
-// with this app and should no longer show up here.
+// with this app and should no longer show up here. Learners with no phone
+// number are also excluded, since there's no way to send them an OTP.
 router.get('/', requireAuth, async (req, res) => {
   const { accessToken, instanceUrl } = req.sfSession;
 
@@ -28,7 +29,8 @@ router.get('/', requireAuth, async (req, res) => {
           `SELECT Id, ${sf.fields.learnerName}, ${sf.fields.learnerGender}, ${sf.fields.learnerPhone}, ` +
           `${sf.fields.learnerStatus}, ${sf.fields.learnerPvcCode} ` +
           `FROM ${sf.learnerObject} WHERE ${sf.fields.learnerBranch} = '${soqlEscape(branch.Id)}' ` +
-          `AND ${sf.fields.learnerSelection} = null`;
+          `AND ${sf.fields.learnerSelection} = null ` +
+          `AND ${sf.fields.learnerPhone} != null`;
         const learners = await soqlQuery({ accessToken, instanceUrl, soql: learnerSoql });
 
         return {
