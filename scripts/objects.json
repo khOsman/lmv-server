@@ -23,6 +23,16 @@
         "api_name":"Apprenticeship_Learner__c",
         "fields":[
             {
+                "field_name":"Cohort",
+                "api_name":"Cohort__c",
+                "data_type":"Lookup(Cohort)"
+            },
+            {
+                "field_name":"Cohort Name",
+                "api_name":"Cohort_Name__c",
+                "data_type":"Formula (Text)"
+            },
+            {
                 "field_name":"Learner Name",
                 "api_name":"Name",
                 "data_type":"Text(80)"

@@ -2,6 +2,7 @@ import express from 'express';
 import requireAuth from '../middleware/requireAuth.js';
 import { soqlQuery, soqlEscape } from '../services/salesforce.js';
 import sf from '../config/sfSchema.js';
+import { TARGET_COHORT } from '../config/filters.js';
 
 const router = express.Router();
 
@@ -16,6 +17,9 @@ const router = express.Router();
 // selection survey and sets Selection__c to Yes/No, that learner is done
 // with this app and should no longer show up here. Learners with no phone
 // number are also excluded, since there's no way to send them an OTP.
+// Also scoped to TARGET_COHORT (see ../config/filters.js) - only that
+// cohort's learners are shown. Update that file (not this one, and not an
+// env var) to change the cohort.
 router.get('/', requireAuth, async (req, res) => {
   const { accessToken, instanceUrl } = req.sfSession;
 
@@ -30,7 +34,8 @@ router.get('/', requireAuth, async (req, res) => {
           `${sf.fields.learnerStatus}, ${sf.fields.learnerPvcCode} ` +
           `FROM ${sf.learnerObject} WHERE ${sf.fields.learnerBranch} = '${soqlEscape(branch.Id)}' ` +
           `AND ${sf.fields.learnerSelection} = null ` +
-          `AND ${sf.fields.learnerPhone} != null`;
+          `AND ${sf.fields.learnerPhone} != null ` +
+          `AND ${sf.fields.learnerCohortName} = '${soqlEscape(TARGET_COHORT)}'`;
         const learners = await soqlQuery({ accessToken, instanceUrl, soql: learnerSoql });
 
         return {

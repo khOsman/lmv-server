@@ -16,6 +16,7 @@ export default {
     learnerBranch: process.env.SF_LEARNER_BRANCH_FIELD || 'Master_Branch__c',
     learnerPvcCode: process.env.SF_LEARNER_PVC_CODE_FIELD || 'PVC__c',
     learnerSelection: process.env.SF_LEARNER_SELECTION_FIELD || 'Selection__c',
+    learnerCohortName: process.env.SF_LEARNER_COHORT_NAME_FIELD || 'Cohort_Name__c',
     branchName: process.env.SF_BRANCH_NAME_FIELD || 'Name',
   },
 };
