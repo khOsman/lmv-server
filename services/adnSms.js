@@ -8,7 +8,7 @@ import FormData from 'form-data';
  * as a normal single SMS.
  */
 export async function sendSms(mobile, messageBody) {
-  const appUrl = process.env.ADN_APP_URL;
+  const appUrl = (process.env.ADN_APP_URL || '').replace(/\/+$/, '');
   if (!appUrl || !process.env.ADN_API_KEY || !process.env.ADN_API_SECRET) {
     throw new Error('ADN SMS is not configured - set ADN_APP_URL/ADN_API_KEY/ADN_API_SECRET in .env.');
   }

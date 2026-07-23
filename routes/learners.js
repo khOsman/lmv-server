@@ -35,7 +35,8 @@ router.post('/:id/send-otp', requireAuth, async (req, res) => {
 });
 
 // POST /learners/:id/verify-otp { otp } -> on match, updates Salesforce
-// with Verified status + a new PVC code/expiry.
+// with Verified status + a new PVC code. PVC is permanent (no expiry field
+// exists on Apprenticeship_Learner__c).
 router.post('/:id/verify-otp', requireAuth, async (req, res) => {
   const { accessToken, instanceUrl } = req.sfSession;
   const learnerId = req.params.id;
@@ -46,26 +47,39 @@ router.post('/:id/verify-otp', requireAuth, async (req, res) => {
   const result = verifyOtp(learnerId, String(otp).trim());
   if (!result.ok) return res.status(400).json({ message: result.reason });
 
-  const pvcCode = `PVC-${Math.floor(100000 + Math.random() * 899999)}`;
-  const pvcExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+  // PVC__c is Text(6) Unique Case Insensitive - retry on the rare collision.
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const pvcCode = generatePvcCode();
+    try {
+      await updateRecord({
+        accessToken,
+        instanceUrl,
+        objectName: sf.learnerObject,
+        id: learnerId,
+        fields: {
+          [sf.fields.learnerStatus]: 'Verified',
+          [sf.fields.learnerPvcCode]: pvcCode,
+        },
+      });
+      return res.json({ status: 'verified', pvcCode });
+    } catch (err) {
+      const isDuplicate = err.response?.data?.[0]?.errorCode === 'DUPLICATE_VALUE';
+      if (isDuplicate && attempt < MAX_ATTEMPTS) continue;
 
-  try {
-    await updateRecord({
-      accessToken,
-      instanceUrl,
-      objectName: sf.learnerObject,
-      id: learnerId,
-      fields: {
-        [sf.fields.learnerStatus]: 'Verified',
-        [sf.fields.learnerPvcCode]: pvcCode,
-        [sf.fields.learnerPvcExpiry]: pvcExpiry,
-      },
-    });
-    res.json({ status: 'verified', pvcCode, pvcExpiry });
-  } catch (err) {
-    console.error('🔴 Salesforce update failed:', err.response?.data || err.message);
-    res.status(500).json({ message: 'OTP verified but failed to update Salesforce.' });
+      console.error('🔴 Salesforce update failed:', err.response?.data || err.message);
+      return res.status(500).json({ message: 'OTP verified but failed to update Salesforce.' });
+    }
   }
 });
+
+function generatePvcCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I ambiguity
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
 
 export default router;

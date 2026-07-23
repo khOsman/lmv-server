@@ -1,30 +1,21 @@
 import axios from 'axios';
 
-const TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token';
 const API_VERSION = 'v59.0';
 
 /**
- * DM login using Salesforce's username-password OAuth flow, so each DM
- * authenticates with their own Salesforce credentials rather than a
- * separate credentials table. Requires the Connected App to have the
- * "Support the OAuth Username-Password Flows" policy enabled and the DM's
- * password to be their SF password + security token appended (Salesforce
- * convention when not calling from a trusted/whitelisted IP range).
+ * DM login happens on-device via the native Authorization Code + PKCE flow
+ * (see the Flutter app's AuthService) - the DM's credentials are entered on
+ * Salesforce's own hosted login page and never reach this backend. The app
+ * hands us the resulting { accessToken, instanceUrl } and we validate it
+ * here by calling Salesforce's own userinfo endpoint: if the token isn't
+ * genuine, this call fails and we reject the session.
  */
-export async function loginWithPassword({ username, password }) {
-  const { data } = await axios.post(TOKEN_URL, null, {
-    params: {
-      grant_type: 'password',
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      username,
-      password,
-    },
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+export async function verifySalesforceSession({ accessToken, instanceUrl }) {
+  const { data } = await axios.get(`${instanceUrl}/services/oauth2/userinfo`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
-  // data.id looks like https://login.salesforce.com/id/<orgId>/<userId>
-  const userId = data.id ? data.id.split('/').pop() : null;
-  return { accessToken: data.access_token, instanceUrl: data.instance_url, userId };
+  const userId = data.user_id || (data.sub ? data.sub.split('/').pop() : null);
+  return { userId, username: data.preferred_username || data.email };
 }
 
 export async function soqlQuery({ accessToken, instanceUrl, soql }) {

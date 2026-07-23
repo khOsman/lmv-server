@@ -1,0 +1,67 @@
+[
+    
+    {
+        "name":"Master Branch",
+        "object_name":"Master_Branch",
+        "api_name":"Master_Branch__c",
+        "fields":[
+             {
+                "field_name":"Branch Name",
+                "api_name":"Name",
+                "data_type":"Text(80)"
+            },
+            {
+                "field_name":"Apprenticeship Learner",
+                "api_name":"Apprenticeship_Learner__c",
+                "data_type":"Lookup(Apprenticeship Learner)"
+            }
+        ]
+    },
+    {
+        "name":"Apprenticeship Learner",
+        "object_name":"Apprenticeship_Learner",
+        "api_name":"Apprenticeship_Learner__c",
+        "fields":[
+            {
+                "field_name":"Learner Name",
+                "api_name":"Name",
+                "data_type":"Text(80)"
+            },
+            {
+                "field_name":"Learner Gender",
+                "api_name":"Learner_Gender__c",
+                "data_type":"Picklist"
+            },
+            {
+                "field_name":"Master Branch",
+                "api_name":"Master_Branch__c",
+                "data_type":"Master-Detail(Master Branch)"
+            },
+            {
+                "field_name":"Selection",
+                "api_name":"Selection__c",
+                "data_type":"Picklist"
+            },
+            {
+                "field_name":"Learner Mobile Number",
+                "api_name":"Learner_Mobile_Number__c",
+                "data_type":"Text(120)"
+            },
+            {
+                "field_name":"Learner Photo [S]",
+                "api_name":"Learner_Photo_S__c",
+                "data_type":"Formula (Text)"
+            },
+            {
+                "field_name":"PVC",
+                "api_name":"PVC__c",
+                "data_type":"Text(6) (Unique Case Insensitive)"
+            },
+            {
+                "field_name":"Verification Status",
+                "api_name":"Verification_Status__c",
+                "data_type":"Picklist"
+            }
+        ]
+    }
+]
